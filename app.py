@@ -174,14 +174,27 @@ def converter_numero(serie):
     return resultado
 
 
-def requisicao_json(url, timeout=30):
-    resposta = requests.get(
-        url,
-        headers=HEADERS_HTTP,
-        timeout=timeout,
-    )
-    resposta.raise_for_status()
-    return resposta.json()
+
+def requisicao_json(url, timeout=12, tentativas=2):
+    ultimo_erro = None
+
+    for tentativa in range(tentativas):
+        try:
+            resposta = requests.get(
+                url,
+                headers=HEADERS_HTTP,
+                timeout=timeout,
+            )
+            resposta.raise_for_status()
+            return resposta.json()
+
+        except (requests.RequestException, ValueError) as erro:
+            ultimo_erro = erro
+
+    raise RuntimeError(
+        f"Falha ao consultar {url} após {tentativas} tentativas: "
+        f"{ultimo_erro}"
+    ) from ultimo_erro
 
 
 # ============================================================
@@ -514,6 +527,7 @@ def carregar_municipios_ibge(uf):
     return df
 
 
+
 @st.cache_data(ttl=86400, show_spinner=False)
 def carregar_malha_estado(uf):
     codigo_uf = UF_CODIGOS.get(uf)
@@ -521,15 +535,44 @@ def carregar_malha_estado(uf):
     if not codigo_uf:
         raise ValueError(f"UF inválida: {uf}")
 
+    # Prioriza a malha municipal armazenada no projeto.
+    arquivo_local = BASE_DIR / "data" / "geo" / f"malha_municipios_{uf}.geojson"
+
+    if arquivo_local.is_file():
+        try:
+            with arquivo_local.open("r", encoding="utf-8") as arquivo:
+                dados = json.load(arquivo)
+
+            if (
+                isinstance(dados, dict)
+                and dados.get("type") == "FeatureCollection"
+                and isinstance(dados.get("features"), list)
+                and dados["features"]
+            ):
+                return dados
+
+        except (OSError, json.JSONDecodeError) as erro:
+            st.warning(
+                f"Não foi possível ler a malha local de {uf}: {erro}. "
+                "Tentando consultar o IBGE."
+            )
+
+    # Alternativa: API oficial do IBGE.
     url = URL_IBGE_MALHA.format(uf=codigo_uf)
     dados = requisicao_json(url)
 
-    if not isinstance(dados, dict) or "features" not in dados:
+    if (
+        not isinstance(dados, dict)
+        or dados.get("type") != "FeatureCollection"
+        or not isinstance(dados.get("features"), list)
+        or not dados["features"]
+    ):
         raise ValueError(
             "A API de malhas do IBGE não retornou GeoJSON válido."
         )
 
     return dados
+
 
 
 def obter_codigo_feature(feature):
