@@ -5,22 +5,3 @@ backgroundColor = "#FFF9FC"
 secondaryBackgroundColor = "#FCE7F3"
 textColor = "#3B1728"
 font = "sans-serif"
-baseRadius = "large"
-buttonRadius = "medium"
-showWidgetBorder = true
-showSidebarBorder = true
-paddingTop = "1.5rem"
-paddingBottom = "2rem"
-
-chartCategoricalColors = [
-    "#BE185D",
-    "#DB2777",
-    "#9D174D",
-    "#7C3AED",
-    "#64748B",
-    "#0F766E"
-]
-
-dataframeHeaderBackgroundColor = "#FCE7F3"
-dataframeHeaderTextColor = "#3B1728"
-dataframeBorderColor = "#F3B6D2"

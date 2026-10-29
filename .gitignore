@@ -1,20 +1,10 @@
-﻿.venv/
-__pycache__/
-*.py[cod]
-.streamlit/secrets.toml
-.env
-.env.*
-!.env.example
-
-# Bases de dados locais
-data/raw/
-data/processed/
-
-# Ambiente e arquivos locais
+﻿
+data/
+reports/
 .venv/
 __pycache__/
 *.py[cod]
-.streamlit/secrets.toml
 .env
 .env.*
-
+!.env.example
+.streamlit/secrets.toml
